@@ -1,10 +1,25 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
+
+def parse_ts(value: str) -> datetime:
+    text = value.strip().replace(" ", "T")
+    return datetime.fromisoformat(text)
+
+
+def format_ts(value: datetime) -> str:
+    return value.isoformat(timespec="seconds")
+
 
 def window_start(occurred_at: str, minutes: int = 15) -> str:
-    hour, minute = map(int, occurred_at[11:16].split(':'))
-    bucket = minute - minute % minutes
-    return f"{occurred_at[:11]}{hour:02d}:{bucket:02d}:00"
+    moment = parse_ts(occurred_at)
+    bucket = moment.minute - moment.minute % minutes
+    return format_ts(moment.replace(minute=bucket, second=0, microsecond=0))
+
+
+def correction_deadline(window_start_text: str, correction_minutes: int) -> str:
+    return format_ts(parse_ts(window_start_text) + timedelta(minutes=correction_minutes))
 
 
 def needs_revision(published: bool, changed: bool) -> bool:

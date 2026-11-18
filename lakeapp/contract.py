@@ -12,6 +12,7 @@ class Event:
     kind: str
     value: float
     occurred_at: str
+    device: str
 
 
 def parse_event(source: str, batch_id: str, cursor: int, raw: dict) -> Event:
@@ -23,4 +24,16 @@ def parse_event(source: str, batch_id: str, cursor: int, raw: dict) -> Event:
         raise ValueError("业务键不能为空")
     if raw["kind"] not in {"upsert", "retract"}:
         raise ValueError("事件类型不受支持")
-    return Event(source, batch_id, int(cursor), raw["business_key"], raw["kind"], float(raw["value"]), str(raw["occurred_at"]))
+    device = raw.get("device")
+    if device is None or not isinstance(device, str) or not device:
+        device = raw["business_key"]
+    return Event(
+        source,
+        batch_id,
+        int(cursor),
+        raw["business_key"],
+        raw["kind"],
+        float(raw["value"]),
+        str(raw["occurred_at"]),
+        device,
+    )
